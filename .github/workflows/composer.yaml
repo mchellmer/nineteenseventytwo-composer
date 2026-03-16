@@ -1,0 +1,53 @@
+name: composer
+
+on:
+  push:
+    paths:
+      - 'services/composer/**'
+      - 'services/musicxml-tools/**'
+    branches: [main]
+  pull_request:
+    paths:
+      - 'services/composer/**'
+      - 'services/musicxml-tools/**'
+
+jobs:
+  test:
+    runs-on: self-hosted
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install musicxml-tools
+        run: pip install -e services/musicxml-tools
+
+      - name: Install composer
+        run: pip install -e "services/composer[dev]"
+
+      - name: Lint
+        run: ruff check services/composer/
+
+      - name: Test
+        run: pytest services/composer/
+
+  build:
+    needs: test
+    if: github.ref == 'refs/heads/main'
+    runs-on: self-hosted
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Read version
+        id: version
+        run: echo "version=$(cat services/composer/version.txt)" >> "$GITHUB_OUTPUT"
+
+      - name: Build image
+        run: |
+          docker build \
+            -f services/composer/Dockerfile \
+            -t composer:${{ steps.version.outputs.version }} \
+            services/
+          docker tag composer:${{ steps.version.outputs.version }} composer:latest

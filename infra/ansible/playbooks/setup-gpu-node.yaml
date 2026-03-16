@@ -1,0 +1,25 @@
+---
+# Setup the PC node for GPU workloads (Ollama, training)
+- name: Configure GPU node
+  hosts: gpu_nodes
+  become: true
+  tasks:
+    - name: Label node for LLM workloads
+      ansible.builtin.command:
+        cmd: kubectl label node {{ inventory_hostname }} workload=llm gpu=true --overwrite
+      delegate_to: localhost
+      become: false
+
+    - name: Ensure NVIDIA container toolkit is installed
+      ansible.builtin.apt:
+        name:
+          - nvidia-container-toolkit
+        state: present
+        update_cache: true
+      when: ansible_os_family == "Debian"
+
+    - name: Restart containerd after toolkit install
+      ansible.builtin.systemd:
+        name: containerd
+        state: restarted
+      when: ansible_os_family == "Debian"

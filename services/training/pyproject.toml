@@ -1,0 +1,38 @@
+[build-system]
+requires = ["setuptools>=68.0", "wheel"]
+build-backend = "setuptools.backends._legacy:_Backend"
+
+[project]
+name = "training"
+dynamic = ["version"]
+description = "Fine-tuning pipeline for bossa arrangement models"
+requires-python = ">=3.12"
+dependencies = [
+    "musicxml-tools @ file:///${PROJECT_ROOT}/../musicxml-tools",
+    "torch>=2.3",
+    "transformers>=4.40",
+    "peft>=0.11",
+    "datasets>=2.19",
+    "trl>=0.8",
+    "bitsandbytes>=0.43",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.0",
+    "ruff>=0.4",
+]
+# Unsloth for faster training (optional, requires specific CUDA setup)
+unsloth = [
+    "unsloth[colab-new]>=2024.4",
+]
+
+[tool.setuptools.dynamic]
+version = {file = "version.txt"}
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py312"
